@@ -3,6 +3,7 @@ import { Search, Heart, User, LogOut, BookOpen, Settings, Crown } from "lucide-r
 
 interface HeaderProps {
   currentUser: any | null;
+  onHome: () => void;
   onOpenLogin: () => void;
   onLogout: () => void;
   onOpenProfile: () => void;
@@ -14,6 +15,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   currentUser,
+  onHome,
   onOpenLogin,
   onLogout,
   onOpenProfile,
@@ -31,7 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center justify-between h-16 gap-4">
           
           {/* Logo */}
-          <div className="flex items-center gap-2 cursor-pointer shrink-0" onClick={() => { setSearchQuery(""); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+          <div className="flex items-center gap-2 cursor-pointer shrink-0" onClick={() => { setSearchQuery(""); onHome(); }}>
             <img
               src="https://i.8upload.com/image/64f36817a74d8291/155-sem-t-tulo-20260730170652.png"
               alt="Kokoro Scans"
