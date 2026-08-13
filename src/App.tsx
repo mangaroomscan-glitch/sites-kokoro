@@ -501,13 +501,6 @@ export default function App() {
               >
                 Discord
               </a>
-              <span>•</span>
-              <button 
-                onClick={() => setIsRulesOpen(true)}
-                className="hover:text-red-500 font-semibold cursor-pointer text-red-400"
-              >
-                Configurar Firebase
-              </button>
             </div>
           </div>
 
