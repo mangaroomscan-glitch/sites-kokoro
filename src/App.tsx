@@ -132,10 +132,20 @@ export default function App() {
     const nextViews = await DBService.incrementMangaViews(manga.id);
     setViewCounts((prev) => ({ ...prev, [manga.id]: nextViews }));
     setSelectedManga(withViews({ ...manga, views: formatViews(nextViews) }));
+    setSelectedChapter(null);
+    window.history.pushState(null, "", `/manga/${manga.id}`);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const featuredManga = MOCK_MANGAS[0];
   const ALL_GENRES = ["Todos", ...Array.from(new Set(MOCK_MANGAS.flatMap((manga) => manga.genres)))];
+
+  const navigateHome = () => {
+    setSelectedManga(null);
+    setSelectedChapter(null);
+    window.history.pushState(null, "", "/");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   // Open a specific chapter in the reader
   const handleOpenChapter = async (mangaObj: Manga, chapterObj: MangaChapter) => {
@@ -144,8 +154,38 @@ export default function App() {
     setSelectedManga({ ...mangaObj, views: formatViews(nextViews) });
     setSelectedChapter(chapterObj);
     setIsFavoritesOpen(false);
+    window.history.pushState(null, "", `/manga/${mangaObj.id}/capitulo/${chapterObj.id}`);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  useEffect(() => {
+    const syncRoute = () => {
+      const [, section, mangaId, subSection, chapterId] = window.location.pathname.split("/");
+      if (section !== "manga" || !mangaId) {
+        setSelectedManga(null);
+        setSelectedChapter(null);
+        return;
+      }
+
+      const manga = MOCK_MANGAS.find((item) => item.id === mangaId);
+      if (!manga) {
+        setSelectedManga(null);
+        setSelectedChapter(null);
+        return;
+      }
+
+      setSelectedManga(withViews(manga));
+      if (subSection === "capitulo" && chapterId) {
+        setSelectedChapter(manga.chapters.find((chapter) => chapter.id === chapterId) || null);
+      } else {
+        setSelectedChapter(null);
+      }
+    };
+
+    syncRoute();
+    window.addEventListener("popstate", syncRoute);
+    return () => window.removeEventListener("popstate", syncRoute);
+  }, [viewCounts]);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans selection:bg-red-600 selection:text-white">
@@ -153,6 +193,7 @@ export default function App() {
       {/* HEADER */}
       <Header
         currentUser={currentUser}
+        onHome={navigateHome}
         onOpenLogin={() => setIsLoginOpen(true)}
         onLogout={handleLogout}
         onOpenProfile={() => setIsProfileOpen(true)}
@@ -169,11 +210,17 @@ export default function App() {
         <MangaReader
           manga={selectedManga}
           chapter={selectedChapter}
-          onBackToManga={() => setSelectedChapter(null)}
+          onBackToManga={() => {
+            setSelectedChapter(null);
+            window.history.pushState(null, "", `/manga/${selectedManga.id}`);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
           onSelectChapter={(chapterId) => {
             const nextCh = selectedManga.chapters.find((c) => c.id === chapterId);
             if (nextCh) {
               setSelectedChapter(nextCh);
+              window.history.pushState(null, "", `/manga/${selectedManga.id}/capitulo/${nextCh.id}`);
+              window.scrollTo({ top: 0, behavior: "smooth" });
             }
           }}
         />
@@ -185,7 +232,7 @@ export default function App() {
           manga={withViews(selectedManga)}
           isFavorited={favorites.includes(selectedManga.id)}
           onToggleFavorite={() => handleToggleFavorite(selectedManga.id)}
-          onBack={() => setSelectedManga(null)}
+          onBack={navigateHome}
           onSelectChapter={(chapter) => handleOpenChapter(selectedManga, chapter)}
           currentUser={currentUser}
           onOpenLogin={() => setIsLoginOpen(true)}
@@ -473,21 +520,21 @@ export default function App() {
             <h4 className="font-extrabold text-white text-xs uppercase tracking-widest">Acesso Rápido</h4>
             <div className="flex flex-wrap justify-center md:justify-start gap-4">
               <button 
-                onClick={() => { setSelectedManga(null); setSelectedChapter(null); setSearchQuery(""); }}
+                onClick={() => { setSearchQuery(""); navigateHome(); }}
                 className="hover:text-red-500 font-semibold cursor-pointer"
               >
                 Início
               </button>
               <span>•</span>
               <button 
-                onClick={() => { setSelectedGenre("Ação"); setSelectedManga(null); setSelectedChapter(null); }}
+                onClick={() => { setSelectedGenre("Ação"); navigateHome(); }}
                 className="hover:text-red-500 font-semibold cursor-pointer"
               >
                 Ação
               </button>
               <span>•</span>
               <button 
-                onClick={() => { setSelectedGenre("Fantasia"); setSelectedManga(null); setSelectedChapter(null); }}
+                onClick={() => { setSelectedGenre("Fantasia"); navigateHome(); }}
                 className="hover:text-red-500 font-semibold cursor-pointer"
               >
                 Fantasia
